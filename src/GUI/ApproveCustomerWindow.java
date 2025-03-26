@@ -84,6 +84,27 @@ public class ApproveCustomerWindow extends JFrame {
         }
     }
 
+    private String generateAccountNumber() {
+        String accountNumber;
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            do {
+                accountNumber = String.valueOf((long) (Math.random() * 1_000_000_0000L)); // Generate a random 10-digit number
+                String query = "SELECT COUNT(*) FROM accounts WHERE account_number = ?";
+                PreparedStatement stmt = conn.prepareStatement(query);
+                stmt.setString(1, accountNumber);
+                ResultSet rs = stmt.executeQuery();
+                rs.next();
+                if (rs.getInt(1) == 0) {
+                    break; // Account number is unique
+                }
+            } while (true);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error generating account number: " + ex.getMessage());
+            accountNumber = null;
+        }
+        return accountNumber;
+    }
+
     private void approveCustomer(int id) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             // Update the status of the customer to "Approved"
@@ -91,21 +112,43 @@ public class ApproveCustomerWindow extends JFrame {
             PreparedStatement updateStatusStmt = conn.prepareStatement(updateStatusQuery);
             updateStatusStmt.setInt(1, id);
             updateStatusStmt.executeUpdate();
-
+    
             // Move the customer from account_request to customers table
             String insertQuery = "INSERT INTO customers (first_name, last_name, phone_number, email, password, account_type) " +
                     "SELECT first_name, last_name, phone_number, email, password, 'customer' FROM account_request WHERE id = ?";
-            PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
+            PreparedStatement insertStmt = conn.prepareStatement(insertQuery, PreparedStatement.RETURN_GENERATED_KEYS);
             insertStmt.setInt(1, id);
             insertStmt.executeUpdate();
-
+    
+            // Get the generated customer ID
+            ResultSet generatedKeys = insertStmt.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                int customerId = generatedKeys.getInt(1);
+    
+                // Generate a unique account number
+                String accountNumber = generateAccountNumber();
+    
+                // Insert the account number into the accounts table
+                String accountQuery = "INSERT INTO accounts (customer_id, account_number, balance) VALUES (?, ?, ?)";
+                PreparedStatement accountStmt = conn.prepareStatement(accountQuery);
+                accountStmt.setInt(1, customerId);
+                accountStmt.setString(2, accountNumber);
+                accountStmt.setDouble(3, 0.0); // Initial balance is 0.0
+                accountStmt.executeUpdate();
+            }
+    
             // Delete the customer from account_request table
             String deleteQuery = "DELETE FROM account_request WHERE id = ?";
             PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery);
             deleteStmt.setInt(1, id);
             deleteStmt.executeUpdate();
-
-            JOptionPane.showMessageDialog(this, "Customer approved successfully!");
+    
+            // Reset the AUTO_INCREMENT value for the account_request table
+            String resetAutoIncrementQuery = "ALTER TABLE account_request AUTO_INCREMENT = 1";
+            PreparedStatement resetStmt = conn.prepareStatement(resetAutoIncrementQuery);
+            resetStmt.executeUpdate();
+    
+            JOptionPane.showMessageDialog(this, "Customer approved successfully! Account number generated.");
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error approving customer: " + ex.getMessage());
         }

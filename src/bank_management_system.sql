@@ -36,4 +36,15 @@ CREATE TABLE staff (
     account_type VARCHAR(20) NOT NULL
 );
 
+CREATE TABLE accounts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    account_number VARCHAR(20) NOT NULL UNIQUE,
+    balance DECIMAL(15,2) DEFAULT 0.00,
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+INSERT INTO staff (first_name, last_name, email, phone_number, password, account_type) VALUES
+('Ly', 'Dara', 'daraboy', '123456789', '1234', 'Staff');
+
 

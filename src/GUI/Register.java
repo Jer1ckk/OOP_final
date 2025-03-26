@@ -68,7 +68,6 @@ public class Register extends JFrame {
             if (registerUser(firstName, lastName, email, phoneNumber, password)) {
                 JOptionPane.showMessageDialog(this, "Registration successful! Awaiting staff approval.");
                 this.dispose(); // Close the registration window
-                new Login();
             } else {
                 JOptionPane.showMessageDialog(this, "Registration failed. Please try again.");
             }

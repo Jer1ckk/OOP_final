@@ -2,7 +2,6 @@ package src.GUI;
 
 import javax.swing.*;
 import src.DatabaseConnection;
-import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -48,10 +47,17 @@ public class Login extends JFrame {
         loginButton.addActionListener(e -> {
             String email = emailField.getText();
             String password = new String(passwordField.getPassword());
-            if (authenticateUser(email, password)) {
+            String accountType = authenticateUser(email, password);
+            if (accountType != null) {
                 JOptionPane.showMessageDialog(this, "Login successful!");
                 this.dispose(); // Close the login window
-                new Customer(); // Open the Customer GUI
+                if (accountType.equalsIgnoreCase("Customer")) {
+                    this.dispose();
+                    new Customer(email); // Open the Customer GUI
+                } else if (accountType.equalsIgnoreCase("Staff")) {
+                    this.dispose();
+                    new Staff(); // Open the Staff GUI
+                }
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid email or password. Please try again.");
             }
@@ -65,25 +71,44 @@ public class Login extends JFrame {
         this.add(loginButton);
         this.add(registerButton);
 
+
         this.setVisible(true);
     }
 
-    private boolean authenticateUser(String email, String password) {
+    private String authenticateUser(String email, String password) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String query = "SELECT password FROM customers WHERE email = ?";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, email);
-            ResultSet rs = stmt.executeQuery();
+            // Check in the customers table
+            String customerQuery = "SELECT password, account_type FROM customers WHERE email = ?";
+            PreparedStatement customerStmt = conn.prepareStatement(customerQuery);
+            customerStmt.setString(1, email);
+            ResultSet customerRs = customerStmt.executeQuery();
     
-            if (rs.next()) {
-                String storedPassword = rs.getString("password");
-                return password.equals(storedPassword);
-            } else {
-                return false; // Email not found
+            if (customerRs.next()) {
+                String storedPassword = customerRs.getString("password");
+                String accountType = customerRs.getString("account_type");
+                if (password.equals(storedPassword)) {
+                    return accountType; // Return the account type from the customers table
+                }
             }
+    
+            // Check in the staff table
+            String staffQuery = "SELECT password, account_type FROM staff WHERE email = ?";
+            PreparedStatement staffStmt = conn.prepareStatement(staffQuery);
+            staffStmt.setString(1, email);
+            ResultSet staffRs = staffStmt.executeQuery();
+    
+            if (staffRs.next()) {
+                String storedPassword = staffRs.getString("password");
+                String accountType = staffRs.getString("account_type");
+                if (password.equals(storedPassword)) {
+                    return accountType; // Return the account type from the staff table
+                }
+            }
+    
+            return null; // Invalid credentials
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error connecting to the database: " + ex.getMessage());
-            return false;
+            return null;
         }
     }
 
