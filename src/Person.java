@@ -1,3 +1,4 @@
+package src;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
@@ -11,19 +12,17 @@ public class Person implements Authenticate, Updatable {
     private String email;
     private String password;
     private String phoneNumber;
-    private String address;
-    private String dateOfBirth;
+    private String accType;
     private final LocalDate registrationDate;
 
-    public Person(String firstName, String lastName, String email, String password, String phoneNumber, String address, String dateOfBirth) {
+    public Person(String firstName, String lastName, String email, String password, String phoneNumber, String accType) {
         this.id = idCounter++;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.phoneNumber = phoneNumber;
-        this.address = address;
-        this.dateOfBirth = dateOfBirth;
+        this.accType = accType;
         this.registrationDate = LocalDate.now();
         persons.add(this);
     }
@@ -50,16 +49,6 @@ public class Person implements Authenticate, Updatable {
             System.out.println("Password changed successfully.");
         } else {
             System.out.println("Incorrect old password. Try again.");
-        }
-    }
-
-    @Override
-    public void updateAddress(String newAddress, String password) {
-        if (this.password.equals(password)) {
-            this.address = newAddress;
-            System.out.println("Address updated successfully.");
-        } else {
-            System.out.println("Incorrect password. Address update failed.");
         }
     }
 
@@ -91,8 +80,7 @@ public class Person implements Authenticate, Updatable {
                email + "," +
                password + "," +
                phoneNumber + "," +
-               address + "," +
-               dateOfBirth + "," +
+               accType + "," +
                registrationDate;
     }
 }

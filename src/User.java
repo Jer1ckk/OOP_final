@@ -1,3 +1,4 @@
+package src;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -13,8 +14,8 @@ class User extends Person {
     // List to store pending registrations
     private static final List<User> pendingRegistrations = new ArrayList<>();
 
-    public User(String firstName, String lastName, String email, String password, String phoneNumber, String address, String dateOfBirth, String pinCode) {
-        super(firstName, lastName, email, password, phoneNumber, address, dateOfBirth);
+    public User(String firstName, String lastName, String email, String password, String phoneNumber, String accType, String pinCode) {
+        super(firstName, lastName, email, password, phoneNumber, accType);
         this.accountId = accountIdCounter++;
         this.pinCode = pinCode;
         this.balance = 0.0;
@@ -35,7 +36,7 @@ class User extends Person {
     // Method to approve or reject a user
     public static boolean processRegistration(User user, Employee employee, boolean approve) {
         try {
-            if (!"HR".equals(employee.getPosition()) && !"Manager".equals(employee.getPosition())) {
+            if (!"HR".equals(employee) && !"Manager".equals(employee)) {
                 throw new SecurityException("Unauthorized to process user registrations.");
             }
 
