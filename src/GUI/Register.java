@@ -68,6 +68,7 @@ public class Register extends JFrame {
             if (registerUser(firstName, lastName, email, phoneNumber, password)) {
                 JOptionPane.showMessageDialog(this, "Registration successful! Awaiting staff approval.");
                 this.dispose(); // Close the registration window
+                new Login();
             } else {
                 JOptionPane.showMessageDialog(this, "Registration failed. Please try again.");
             }
@@ -92,7 +93,8 @@ public class Register extends JFrame {
 
     private boolean registerUser(String firstName, String lastName, String email, String phoneNumber, String password) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String query = "INSERT INTO account_request (first_name, last_name, phone_number, email, password) VALUES (?, ?, ?, ?, ?)";
+            String query = "INSERT INTO account_request (first_name, last_name, phone_number, email, password, account_type, request_date, status) " +
+               "VALUES (?, ?, ?, ?, ?, 'Customer', CURRENT_DATE, 'Pending')";
             PreparedStatement stmt = conn.prepareStatement(query);
             stmt.setString(1, firstName);
             stmt.setString(2, lastName);

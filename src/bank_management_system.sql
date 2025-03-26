@@ -10,7 +10,10 @@ CREATE TABLE account_request (
     last_name VARCHAR(50) NOT NULL,
     phone_number VARCHAR(15) NOT NULL,
     email VARCHAR(100) UNIQUE KEY,
-    password VARCHAR(255) NOT NULL
+    password VARCHAR(255) NOT NULL,
+    request_date DATE NOT NULL,
+    account_type VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL
 );
 
 CREATE TABLE customers (

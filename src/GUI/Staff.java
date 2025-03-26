@@ -46,7 +46,7 @@ public class Staff extends JFrame {
 
         // Action listener for "Approve Customer" button
         approveButton.addActionListener(e -> new ApproveCustomerWindow());
-        
+        logoutButton.addActionListener(e -> new Login());
 
         this.setVisible(true);
     }

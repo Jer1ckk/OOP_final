@@ -19,7 +19,7 @@ public class ApproveCustomerWindow extends JFrame {
         this.setResizable(false);
 
         // Table for pending approvals
-        String[] columnNames = {"ID", "First Name", "Last Name", "Phone Number", "Email"};
+        String[] columnNames = {"ID", "First Name", "Last Name", "Phone Number", "Email", "Request Date", "Status"};
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
         JTable approvalTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(approvalTable);
@@ -65,7 +65,7 @@ public class ApproveCustomerWindow extends JFrame {
 
     private void loadPendingRequests(DefaultTableModel tableModel) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String query = "SELECT id, first_name, last_name, phone_number, email FROM account_request";
+            String query = "SELECT id, first_name, last_name, phone_number, email, request_date, status FROM account_request";
             PreparedStatement stmt = conn.prepareStatement(query);
             ResultSet rs = stmt.executeQuery();
 
@@ -75,7 +75,9 @@ public class ApproveCustomerWindow extends JFrame {
                 String lastName = rs.getString("last_name");
                 String phoneNumber = rs.getString("phone_number");
                 String email = rs.getString("email");
-                tableModel.addRow(new Object[]{id, firstName, lastName, phoneNumber, email});
+                String requestDate = rs.getString("request_date");
+                String status = rs.getString("status");
+                tableModel.addRow(new Object[]{id, firstName, lastName, phoneNumber, email, requestDate, status});
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error loading pending requests: " + ex.getMessage());
@@ -84,6 +86,12 @@ public class ApproveCustomerWindow extends JFrame {
 
     private void approveCustomer(int id) {
         try (Connection conn = DatabaseConnection.getConnection()) {
+            // Update the status of the customer to "Approved"
+            String updateStatusQuery = "UPDATE account_request SET status = 'Approved' WHERE id = ?";
+            PreparedStatement updateStatusStmt = conn.prepareStatement(updateStatusQuery);
+            updateStatusStmt.setInt(1, id);
+            updateStatusStmt.executeUpdate();
+
             // Move the customer from account_request to customers table
             String insertQuery = "INSERT INTO customers (first_name, last_name, phone_number, email, password, account_type) " +
                     "SELECT first_name, last_name, phone_number, email, password, 'customer' FROM account_request WHERE id = ?";
@@ -105,6 +113,12 @@ public class ApproveCustomerWindow extends JFrame {
 
     private void rejectCustomer(int id) {
         try (Connection conn = DatabaseConnection.getConnection()) {
+            // Update the status of the customer to "Rejected"
+            String updateStatusQuery = "UPDATE account_request SET status = 'Rejected' WHERE id = ?";
+            PreparedStatement updateStatusStmt = conn.prepareStatement(updateStatusQuery);
+            updateStatusStmt.setInt(1, id);
+            updateStatusStmt.executeUpdate();
+
             // Delete the customer from account_request table
             String deleteQuery = "DELETE FROM account_request WHERE id = ?";
             PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery);
